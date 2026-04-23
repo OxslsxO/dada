@@ -1,0 +1,48 @@
+<view class="custom-tab-bar">
+  <view
+    class="tab-item {{activeIndex === 0 ? 'active' : ''}}"
+    bindtap="switchTab"
+    data-index="0"
+    data-path="/pages/index/index"
+  >
+    <view class="icon-wrap">
+      <view class="icon-svg home-icon"></view>
+    </view>
+    <text class="tab-text">首页</text>
+  </view>
+
+  <view
+    class="tab-item {{activeIndex === 2 ? 'active' : ''}}"
+    bindtap="switchTab"
+    data-index="2"
+    data-path="/pages/messages/messages"
+  >
+    <view class="icon-wrap">
+      <view class="icon-svg message-icon"></view>
+    </view>
+    <text class="tab-text">消息</text>
+  </view>
+
+  <view
+    class="tab-item create-item"
+    bindtap="switchTab"
+    data-index="1"
+    data-path="/pages/create/create"
+  >
+    <view class="create-core">
+      <view class="create-plus"></view>
+    </view>
+  </view>
+
+  <view
+    class="tab-item {{activeIndex === 3 ? 'active' : ''}}"
+    bindtap="switchTab"
+    data-index="3"
+    data-path="/pages/profile/profile"
+  >
+    <view class="icon-wrap">
+      <view class="icon-svg profile-icon"></view>
+    </view>
+    <text class="tab-text">我的</text>
+  </view>
+</view>

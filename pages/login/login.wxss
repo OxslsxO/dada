@@ -1,0 +1,103 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7fa;
+}
+
+/* 登录页面 */
+.login-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 48rpx;
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.logo {
+  font-size: 72rpx;
+  font-weight: bold;
+  color: #1677ff;
+  margin-bottom: 32rpx;
+  text-shadow: 0 4rpx 12rpx rgba(22, 119, 255, 0.3);
+}
+
+.slogan {
+  font-size: 32rpx;
+  color: #666;
+  margin-bottom: 120rpx;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* 绑定和认证页面 */
+.bind-container,
+.auth-container {
+  flex: 1;
+  padding: 64rpx 24rpx;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 56rpx;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.form {
+  margin-bottom: 40rpx;
+  background-color: white;
+  padding: 36rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.form-item {
+  margin-bottom: 32rpx;
+}
+
+.code-input {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.code-input .input {
+  flex: 1;
+  margin-right: 0;
+}
+
+.code-btn {
+  width: 200rpx;
+  height: 80rpx;
+  font-size: 26rpx;
+  transition: all 0.3s;
+}
+
+.code-btn:active {
+  transform: scale(0.95);
+}
+
+.tip {
+  font-size: 26rpx;
+  color: #999;
+  text-align: center;
+  margin-top: 40rpx;
+  line-height: 1.6;
+  padding: 0 24rpx;
+}
+
+.btn-primary {
+  height: 96rpx;
+  font-size: 32rpx;
+  transition: all 0.3s;
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}

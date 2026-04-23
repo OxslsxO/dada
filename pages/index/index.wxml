@@ -1,0 +1,207 @@
+<view class="discover-page">
+  <view class="top-glow top-glow-left"></view>
+  <view class="top-glow top-glow-right"></view>
+
+  <view class="hero-shell">
+    <view class="nav-bar">
+      <view class="nav-brand">
+        <text class="brand-mark">D</text>
+        <view class="brand-copy">
+          <text class="brand-name">搭搭</text>
+          <text class="brand-tagline">同城轻组局 · 年轻人的陪伴感</text>
+        </view>
+      </view>
+      <view class="nav-actions">
+        <view class="notification-container" bindtap="goToMessages">
+          <text class="nav-icon">✦</text>
+          <view class="notification-dot"></view>
+        </view>
+        <view class="capsule-btn">
+          <text class="capsule-icon">·</text>
+          <view class="capsule-divider"></view>
+          <text class="capsule-icon">○</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="tab-scroll-container">
+    <scroll-view class="tab-scroll" scroll-x="true" enhanced show-scrollbar="false">
+      <view class="tab-container">
+        <view
+          class="tab-item {{activeTab === index ? 'active' : ''}}"
+          wx:for="{{tabList}}"
+          wx:key="index"
+          bindtap="switchTab"
+          data-index="{{index}}"
+        >
+          {{item}}
+        </view>
+      </view>
+    </scroll-view>
+    <view class="filter-tab-fixed {{hasActiveFilters ? 'is-active' : ''}}" bindtap="toggleFilter">
+      <text class="filter-icon-text">筛选</text>
+    </view>
+  </view>
+
+  <view class="active-filter-strip" wx:if="{{hasActiveFilters}}">
+    <text wx:if="{{activeFilters.type}}" class="active-filter-chip">{{activeFilters.type}}</text>
+    <text wx:if="{{activeFilters.time}}" class="active-filter-chip">{{activeFilters.time}}</text>
+    <text wx:if="{{activeFilters.location}}" class="active-filter-chip">{{activeFilters.location}}</text>
+    <text wx:if="{{activeFilters.people}}" class="active-filter-chip">{{activeFilters.people}}</text>
+  </view>
+
+  <view class="filter-overlay {{showFilterPanel ? 'show' : ''}}" bindtap="closeFilter"></view>
+  <view class="filter-section-container {{showFilterPanel ? 'expanded' : ''}}">
+    <view class="filter-content" catchtap="stopPropagation">
+      <view class="filter-header">
+        <view>
+          <text class="filter-title">筛选你的舒适局</text>
+          <text class="filter-subtitle">告诉我们你现在更想去哪一类场景</text>
+        </view>
+        <text class="filter-toggle" bindtap="closeFilter">×</text>
+      </view>
+
+      <view class="filter-section">
+        <view class="section-label">活动类型</view>
+        <view class="option-list">
+          <view
+            class="option-item {{filterOptions.type === item ? 'active' : ''}}"
+            wx:for="{{typeOptions}}"
+            wx:key="index"
+            bindtap="selectType"
+            data-value="{{item}}"
+          >
+            {{item}}
+          </view>
+        </view>
+      </view>
+
+      <view class="filter-section">
+        <view class="section-label">时间偏好</view>
+        <view class="option-list">
+          <view
+            class="option-item {{filterOptions.time === item ? 'active' : ''}}"
+            wx:for="{{timeOptions}}"
+            wx:key="index"
+            bindtap="selectTime"
+            data-value="{{item}}"
+          >
+            {{item}}
+          </view>
+        </view>
+        <view class="custom-time" wx:if="{{filterOptions.time === '自定义'}}">
+          <view class="time-picker-row">
+            <text class="time-label">开始</text>
+            <picker mode="datetime" value="{{startTime}}" bindchange="bindStartTimeChange">
+              <view class="time-picker">{{startTimeText}}</view>
+            </picker>
+          </view>
+          <view class="time-picker-row">
+            <text class="time-label">结束</text>
+            <picker mode="datetime" value="{{endTime}}" bindchange="bindEndTimeChange">
+              <view class="time-picker">{{endTimeText}}</view>
+            </picker>
+          </view>
+        </view>
+      </view>
+
+      <view class="filter-section">
+        <view class="section-label">区域</view>
+        <view class="option-list">
+          <view
+            class="option-item {{filterOptions.location === item ? 'active' : ''}}"
+            wx:for="{{locationOptions}}"
+            wx:key="index"
+            bindtap="selectLocation"
+            data-value="{{item}}"
+          >
+            {{item}}
+          </view>
+        </view>
+      </view>
+
+      <view class="filter-section">
+        <view class="section-label">人数规模</view>
+        <view class="option-list">
+          <view
+            class="option-item {{filterOptions.people === item ? 'active' : ''}}"
+            wx:for="{{peopleOptions}}"
+            wx:key="index"
+            bindtap="selectPeople"
+            data-value="{{item}}"
+          >
+            {{item}}
+          </view>
+        </view>
+      </view>
+
+      <view class="filter-actions">
+        <button class="filter-btn reset-btn" bindtap="resetFilter">重置</button>
+        <button class="filter-btn confirm-btn" bindtap="confirmFilter">查看结果</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="activity-container">
+    <view
+      class="activity-card"
+      wx:for="{{activityList}}"
+      wx:key="id"
+      bindtap="goToDetail"
+      data-id="{{item.id}}"
+    >
+        <view class="card-image-wrap">
+        <image class="card-image" src="{{item.cover}}" mode="aspectFill"></image>
+        <view class="image-mask"></view>
+        <view class="card-type-tag">{{item.type}}</view>
+        <view class="card-badge">
+          <block wx:if="{{index === 0}}">编辑精选</block>
+          <block wx:else>正在成局</block>
+        </view>
+      </view>
+
+      <view class="card-body">
+        <view class="card-heading">
+          <text class="card-title">{{item.title}}</text>
+          <text class="card-desc">{{item.description}}</text>
+          <text class="card-desc" wx:if="{{!item.description}}">轻松成局，见面不尴尬，节奏刚刚好。</text>
+        </view>
+
+        <view class="meta-row">
+          <view class="meta-pill">
+            <text class="meta-pill-icon">⌖</text>
+            <text class="meta-pill-text">{{item.location}}</text>
+          </view>
+          <view class="meta-pill">
+            <text class="meta-pill-icon">◔</text>
+            <text class="meta-pill-text">{{item.currentNum}} / {{item.totalNum}} 人</text>
+          </view>
+          <view class="meta-pill" wx:if="{{item.timeText || item.time}}">
+            <text class="meta-pill-icon">↺</text>
+            <text class="meta-pill-text">{{item.timeText || item.time}}</text>
+          </view>
+        </view>
+
+        <view class="tag-row" wx:if="{{item.tags && item.tags.length}}">
+          <text class="scene-tag" wx:for="{{item.tags}}" wx:key="index">{{item}}</text>
+        </view>
+
+        <view class="card-footer">
+          <view class="user-info">
+            <image class="user-avatar" src="{{item.avatar}}"></image>
+            <view class="user-meta">
+              <text class="user-name">{{item.nickname}}</text>
+              <text class="user-role">发起人</text>
+            </view>
+          </view>
+          <view class="join-btn" bindtap="joinActivity" data-id="{{item.id}}" catchtap="stopBubble">
+            去加入
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <custom-tab-bar />
+</view>

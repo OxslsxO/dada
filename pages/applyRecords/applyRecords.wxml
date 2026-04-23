@@ -1,0 +1,39 @@
+<view class="container">
+  <!-- 申请记录列表 -->
+  <scroll-view scroll-y="true" class="record-list">
+    <view 
+      wx:for="{{records}}" 
+      wx:key="id"
+      class="record-card card fade-in"
+    >
+      <view class="record-header">
+        <view class="record-title">{{item.gridTitle}}</view>
+        <view class="record-status {{item.status === '已通过' ? 'status-success' : item.status === '已拒绝' ? 'status-fail' : 'status-pending'}}">
+          {{item.status}}
+        </view>
+      </view>
+      <view class="record-info">
+        <view class="info-item">
+          <text class="info-label">申请时间：</text>
+          <text class="info-value">{{item.applyTime}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">申请理由：</text>
+          <text class="info-value">{{item.reason}}</text>
+        </view>
+        <view class="info-item" wx:if="{{item.feedback}}">
+          <text class="info-label">审核反馈：</text>
+          <text class="info-value">{{item.feedback}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{records.length === 0}}" class="empty">
+      <view class="empty-icon">📋</view>
+      <view class="empty-text">暂无申请记录</view>
+      <view class="empty-desc">快去申请加入感兴趣的搭子格子吧</view>
+      <button class="btn btn-primary mt-2" bindtap="goToHome">浏览搭子格子</button>
+    </view>
+  </scroll-view>
+</view>

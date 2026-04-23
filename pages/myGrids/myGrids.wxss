@@ -1,0 +1,63 @@
+.container {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+}
+
+.grid-list {
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.grid-card {
+  margin: 24rpx;
+  transition: all 0.3s;
+}
+
+.grid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.grid-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.grid-info {
+  margin-bottom: 16rpx;
+}
+
+.info-item {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
+.info-label {
+  color: #999;
+}
+
+.grid-footer {
+  margin-top: 16rpx;
+}
+
+.grid-status {
+  font-size: 24rpx;
+  color: #1677ff;
+  margin-bottom: 16rpx;
+}
+
+.grid-actions {
+  display: flex;
+  gap: 12rpx;
+}
+
+.action-btn {
+  flex: 1;
+  height: 72rpx;
+  font-size: 24rpx;
+}

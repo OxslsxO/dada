@@ -1,0 +1,17 @@
+<view class="container">
+  <view class="card">
+    <view class="form">
+      <view class="form-item">
+        <text class="label">申请理由</text>
+        <textarea 
+          class="textarea" 
+          placeholder="请简要说明你想加入的理由" 
+          bindinput="bindReasonInput"
+          value="{{reason}}"
+          maxlength="200"
+        />
+      </view>
+      <button class="btn btn-primary" bindtap="submitApply">提交申请</button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,89 @@
+<view class="profile-page">
+  <view class="profile-hero">
+    <view class="hero-glow hero-glow-left"></view>
+    <view class="hero-glow hero-glow-right"></view>
+
+    <view class="hero-heading">
+      <text class="hero-kicker">MY CORNER</text>
+      <text class="hero-title">我的搭搭空间</text>
+      <text class="hero-subtitle">把你参加的局、创建的局和个人状态放在一个更舒服的地方。</text>
+    </view>
+
+    <view class="user-card">
+      <view class="user-main">
+        <image src="{{userInfo.avatarUrl}}" class="avatar" />
+        <view class="user-info">
+          <text class="user-name">{{userInfo.nickname}}</text>
+          <text class="user-status" wx:if="{{isAuthenticated}}">已认证，见面更安心</text>
+          <text class="user-status" wx:else>未认证，完善资料更容易被信任</text>
+        </view>
+      </view>
+      <button class="btn btn-secondary edit-btn" bindtap="editProfile">编辑资料</button>
+    </view>
+
+    <view class="mood-strip">
+      <view class="mood-pill primary">今天也适合认识新朋友</view>
+      <view class="mood-pill">轻松组局</view>
+      <view class="mood-pill">同城陪伴</view>
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-head">
+      <view>
+        <text class="section-kicker">QUICK ACCESS</text>
+        <text class="section-title">常用入口</text>
+      </view>
+      <text class="section-tip">高频操作放前面</text>
+    </view>
+
+    <view class="quick-grid">
+      <view class="quick-card warm" bindtap="goToMyGrids">
+        <text class="quick-icon">⌂</text>
+        <text class="quick-title">我创建的局</text>
+        <text class="quick-desc">管理发起中的活动和招募进度</text>
+      </view>
+      <view class="quick-card green" bindtap="goToMyDadas">
+        <text class="quick-icon">◔</text>
+        <text class="quick-title">我的搭子</text>
+        <text class="quick-desc">看看一起玩过和还想再约的人</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-head">
+      <view>
+        <text class="section-kicker">TOOLS</text>
+        <text class="section-title">账号与记录</text>
+      </view>
+      <text class="section-tip">把重要信息收在一起</text>
+    </view>
+
+    <view class="function-list">
+      <view class="function-item" bindtap="goToApplyRecords">
+        <view class="function-icon">↺</view>
+        <view class="function-copy">
+          <text class="function-title">申请记录</text>
+          <text class="function-desc">查看你发出的加入申请和最新状态</text>
+        </view>
+        <text class="function-arrow">›</text>
+      </view>
+
+      <view class="function-item" bindtap="goToSecurity">
+        <view class="function-icon">✦</view>
+        <view class="function-copy">
+          <text class="function-title">安全设置</text>
+          <text class="function-desc">账号隐私、通知方式和资料保护</text>
+        </view>
+        <text class="function-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="logout-panel">
+    <button class="btn logout-btn" bindtap="logout">退出登录</button>
+  </view>
+
+  <custom-tab-bar />
+</view>

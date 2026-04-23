@@ -1,0 +1,26 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/login/login",
+    "pages/create/create",
+    "pages/detail/detail",
+    "pages/apply/apply",
+    "pages/profile/profile",
+    "pages/myGrids/myGrids",
+    "pages/applyRecords/applyRecords",
+    "pages/messages/messages"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ff9e80",
+    "navigationBarTitleText": "搭哒",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#fdfbf7"
+  },
+
+  "networkTimeout": {
+    "request": 10000,
+    "downloadFile": 10000
+  },
+  "debug": true
+}

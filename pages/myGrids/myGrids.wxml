@@ -1,0 +1,48 @@
+<view class="container">
+  <!-- 我创建的格子列表 -->
+  <scroll-view scroll-y="true" class="grid-list">
+    <view 
+      wx:for="{{grids}}" 
+      wx:key="id"
+      class="grid-card card fade-in"
+    >
+      <view class="grid-header">
+        <view class="grid-title">{{item.title}}</view>
+        <view class="grid-tag tag tag-primary">{{item.type}}</view>
+      </view>
+      <view class="grid-info">
+        <view class="info-item">
+          <text class="info-label">人数：</text>
+          <text class="info-value">{{item.currentMembers}}/{{item.maxMembers}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">时间：</text>
+          <text class="info-value">{{item.time}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">地点：</text>
+          <text class="info-value">{{item.location}}</text>
+        </view>
+      </view>
+      <view class="grid-footer">
+        <view class="grid-status">{{item.status}}</view>
+        <view class="grid-actions">
+          <button class="btn btn-secondary action-btn" bindtap="viewApplications" data-id="{{item.id}}">
+            查看申请 ({{item.applyCount}})
+          </button>
+          <button class="btn btn-secondary action-btn" bindtap="viewMembers" data-id="{{item.id}}">
+            查看成员
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{grids.length === 0}}" class="empty">
+      <view class="empty-icon">📋</view>
+      <view class="empty-text">暂无创建的格子</view>
+      <view class="empty-desc">快去创建第一个搭子格子吧</view>
+      <button class="btn btn-primary mt-2" bindtap="goToCreate">创建搭子格子</button>
+    </view>
+  </scroll-view>
+</view>

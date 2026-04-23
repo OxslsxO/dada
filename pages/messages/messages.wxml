@@ -1,0 +1,30 @@
+<view class="container">
+  <!-- 消息列表 -->
+  <scroll-view scroll-y="true" class="message-list">
+    <view 
+      wx:for="{{messages}}" 
+      wx:key="id"
+      class="message-item fade-in"
+      bindtap="viewMessage"
+      data-id="{{item.id}}"
+    >
+      <view class="message-icon">{{item.icon}}</view>
+      <view class="message-content">
+        <view class="message-title">{{item.title}}</view>
+        <view class="message-desc">{{item.content}}</view>
+        <view class="message-time">{{item.time}}</view>
+      </view>
+      <view wx:if="{{!item.read}}" class="message-badge"></view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{messages.length === 0}}" class="empty">
+      <view class="empty-icon">💬</view>
+      <view class="empty-text">暂无消息</view>
+      <view class="empty-desc">有新消息时会显示在这里</view>
+    </view>
+  </scroll-view>
+
+  <!-- 自定义 Tab bar -->
+  <custom-tab-bar />
+</view>

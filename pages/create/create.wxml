@@ -1,0 +1,136 @@
+<view class="container">
+  <form bindsubmit="submitForm" class="form">
+    <view class="form-item">
+      <text class="label">标题</text>
+      <input 
+        class="input" 
+        name="title" 
+        placeholder="请输入搭子格子标题" 
+        required
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">活动类型</text>
+      <picker 
+        name="type" 
+        range="{{types}}" 
+        range-key="name" 
+        bindchange="bindTypeChange"
+        value="{{typeIndex}}"
+      >
+        <view class="picker">
+          {{types[typeIndex].name}}
+        </view>
+      </picker>
+    </view>
+
+    <!-- 标签选择 -->
+    <view class="form-item">
+      <text class="label">添加标签</text>
+      <view class="tag-selector">
+        <view class="preset-tags">
+          <view 
+            class="tag-item {{selectedTags.indexOf(tag) !== -1 ? 'active' : ''}}" 
+            wx:for="{{presetTags}}" 
+            wx:key="index"
+            bindtap="toggleTag"
+            data-tag="{{tag}}"
+          >
+            {{tag}}
+          </view>
+        </view>
+        <view class="custom-tag-input">
+          <input 
+            class="input tag-input" 
+            placeholder="输入自定义标签" 
+            bindconfirm="addCustomTag"
+            value="{{customTagValue}}"
+            bindinput="onCustomTagInput"
+          />
+          <text class="add-tag-btn" bindtap="addCustomTag">添加</text>
+        </view>
+      </view>
+      <view class="selected-tags">
+        <view class="selected-tag" wx:for="{{selectedTags}}" wx:key="index">
+          {{item}}
+          <text class="remove-tag" bindtap="removeTag" data-index="{{index}}">×</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">人数限制</text>
+      <view class="number-input">
+        <input 
+          class="input number" 
+          name="maxMembers" 
+          type="number" 
+          placeholder="请输入最大人数" 
+          required
+        />
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">活动时间</text>
+      <picker 
+        name="time" 
+        mode="datetime" 
+        bindchange="bindTimeChange"
+        value="{{timeValue}}"
+        start="{{startTime}}"
+      >
+        <view class="picker">
+          {{timeText}}
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="label">活动地点</text>
+      <view class="location-selector">
+        <button class="location-btn" bindtap="chooseLocation" type="default">
+          📍 选择位置
+        </button>
+        <view class="location-info" wx:if="{{locationInfo.name}}">
+          <text class="location-name">{{locationInfo.name}}</text>
+          <text class="location-address">{{locationInfo.address}}</text>
+        </view>
+        <input 
+          class="input location-input" 
+          name="location" 
+          placeholder="或手动输入地点" 
+          value="{{manualLocation}}"
+          bindinput="onManualLocationInput"
+        />
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">详细描述</text>
+      <textarea 
+        class="textarea" 
+        name="description" 
+        placeholder="请详细描述活动内容、要求等信息" 
+        required
+        maxlength="500"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">加入要求</text>
+      <textarea 
+        class="textarea" 
+        name="requirements" 
+        placeholder="请输入加入要求（可选）"
+        maxlength="200"
+      />
+    </view>
+
+    <button form-type="submit" class="btn btn-primary">创建搭子格子</button>
+  </form>
+
+  <!-- 自定义 Tab bar -->
+  <custom-tab-bar />
+</view>

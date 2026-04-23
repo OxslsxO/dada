@@ -1,0 +1,102 @@
+<view class="detail-page">
+  <view class="hero-card">
+    <image src="{{grid.cover}}" class="hero-image" mode="aspectFill" />
+    <view class="hero-overlay"></view>
+
+    <view class="hero-topbar">
+      <view class="hero-type">{{grid.type}}</view>
+      <view class="hero-collection" bindtap="toggleCollect">
+        <block wx:if="{{isCollected}}">已收藏</block>
+        <block wx:else>收藏</block>
+      </view>
+    </view>
+
+    <view class="hero-copy">
+      <view class="hero-badge-row">
+        <text class="hero-badge">年轻有趣</text>
+        <text class="hero-badge" wx:if="{{grid.tags && grid.tags.length}}">{{grid.tags[0]}}</text>
+      </view>
+      <text class="hero-title">{{grid.title}}</text>
+      <text class="hero-desc">{{grid.description}}</text>
+      <text class="hero-desc" wx:if="{{!grid.description}}">一场不必刻意破冰的轻松见面，把想做的事一起完成。</text>
+    </view>
+  </view>
+
+  <view class="content-stack">
+    <view class="summary-card">
+      <view class="summary-head">
+        <view>
+          <text class="section-kicker">FAST LOOK</text>
+          <text class="summary-title">先看适不适合你</text>
+        </view>
+        <text class="summary-status">{{grid.currentMembers || 1}} / {{grid.maxMembers}} 人</text>
+      </view>
+
+      <view class="summary-grid">
+        <view class="summary-item">
+          <text class="summary-label">地点</text>
+          <text class="summary-value">{{grid.location}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">时间</text>
+          <text class="summary-value">{{grid.timeText || grid.time}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">人数</text>
+          <text class="summary-value">{{grid.currentMembers || 1}} / {{grid.maxMembers}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">氛围</text>
+          <text class="summary-value">{{grid.type}}</text>
+        </view>
+      </view>
+
+      <view class="tag-list" wx:if="{{grid.tags && grid.tags.length > 0}}">
+        <text class="detail-tag" wx:for="{{grid.tags}}" wx:key="index">{{item}}</text>
+      </view>
+    </view>
+
+    <view class="info-card">
+      <view class="info-head">
+        <text class="section-title">这场局怎么玩</text>
+        <text class="section-tip">清晰一点，见面会更轻松</text>
+      </view>
+      <text class="info-content">{{grid.description}}</text>
+    </view>
+
+    <view class="info-card" wx:if="{{grid.requirements}}">
+      <view class="info-head">
+        <text class="section-title">加入前先看看</text>
+        <text class="section-tip">提前对齐节奏</text>
+      </view>
+      <text class="info-content">{{grid.requirements}}</text>
+    </view>
+
+    <view class="host-card">
+      <view class="host-head">
+        <text class="section-title">发起人</text>
+        <text class="section-tip" wx:if="{{grid.creator.verified}}">已认证用户</text>
+        <text class="section-tip" wx:else>普通用户</text>
+      </view>
+
+      <view class="creator-info">
+        <image src="{{grid.creator.avatarUrl}}" class="avatar" />
+        <view class="creator-details">
+          <text class="creator-name">{{grid.creator.nickname}}</text>
+          <text class="creator-status" wx:if="{{grid.creator.verified}}">资料已认证，更值得信任</text>
+          <text class="creator-status" wx:else>资料未认证，建议先沟通</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="action-buttons">
+    <button class="btn btn-secondary" bindtap="toggleCollect">
+      <block wx:if="{{isCollected}}">取消收藏</block>
+      <block wx:else>先收藏</block>
+    </button>
+    <button class="btn btn-primary" bindtap="applyToJoin">
+      申请加入
+    </button>
+  </view>
+</view>
