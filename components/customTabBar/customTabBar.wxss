@@ -2,49 +2,57 @@
   position: fixed;
   left: 40rpx;
   right: 40rpx;
-  bottom: 40rpx;
+  bottom: 28rpx;
   z-index: 999;
-  height: 100rpx;
-  padding: 8rpx 16rpx calc(env(safe-area-inset-bottom) + 8rpx);
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  border-radius: 50rpx;
-  background: rgba(255, 252, 247, 0.95);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  column-gap: 8rpx;
+  min-height: 92rpx;
+  /* 重点：把底部内边距压到最小！！！你之前留白全是这里撑的 */
+  padding: 10rpx 16rpx 0 !important;
+  padding-bottom: calc(env(safe-area-inset-bottom) * 0.5) !important;
+  border-radius: 30rpx;
+  background: rgba(255, 251, 245, 0.96);
   box-shadow:
-    0 12rpx 40rpx rgba(76, 64, 39, 0.12),
-    0 2rpx 8rpx rgba(76, 64, 39, 0.06),
+    0 16rpx 36rpx rgba(76, 64, 39, 0.1),
+    0 3rpx 10rpx rgba(76, 64, 39, 0.05),
     inset 0 1rpx 0 rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(24rpx);
   box-sizing: border-box;
 }
 
 .tab-item {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  flex: 1;
-  height: 100%;
-  padding: 0 !important; 
+  justify-content: flex-end; /* 内容整体靠底部 */
+  height: 100%; /* 继承grid高度 */
+  min-height: auto;
+  padding: 0 0 6rpx !important; /* 底部留一点间距，不贴死 */
   margin: 0 !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tab-item:active {
-  transform: scale(0.92);
+  transform: scale(0.96);
 }
 
-
-.icon-wrap {
-  margin-bottom: 0 !important; 
-  flex-shrink: 0; 
+.tab-icon-shell {
+  width: 56rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4rpx;  /* 从 6rpx 稍微减少，让文字更紧凑（可选） */
+  border-radius: 20rpx;
+  transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .icon-svg {
-  width: 40rpx;
-  height: 40rpx;
+  width: 34rpx;
+  height: 34rpx;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -75,81 +83,91 @@
   background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="16" r="7" stroke="%23466A52" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 40C10 32.268 16.268 26 24 26C31.732 26 38 32.268 38 40" stroke="%23466A52" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>');
 }
 
+.tab-item.active .tab-icon-shell {
+  background: rgba(70, 106, 82, 0.1);
+}
+
 .tab-item.active .icon-svg {
-  transform: translateY(-2rpx);
-  filter: drop-shadow(0 4rpx 8rpx rgba(70, 106, 82, 0.25));
+  transform: translateY(-1rpx);
+  filter: drop-shadow(0 4rpx 8rpx rgba(70, 106, 82, 0.16));
 }
 
 .tab-text {
-  font-size: 20rpx !important;
-  line-height: 1 !important;
+  display: block;
+  margin: 0 !important;
+  /* 行高设置为与 font-size 相同或略小，彻底消除字体自带的底部空白 */
+  font-size: 18rpx !important;
+  line-height: 1 !important;    /* 1 = 18rpx，无多余行高空间 */
   font-weight: 500 !important;
+  letter-spacing: 0.2rpx;
   color: #8c988f !important;
-  margin-top: 36rpx !important; 
-  margin-bottom: 6rpx !important; 
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative !important;
-  top: 0 !important; 
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 激活态保持样式，无需改动 */
 .tab-item.active .tab-text {
-  color: #466a52;
+  color: #466a52 !important;
   font-weight: 600;
 }
 
-.create-item {
-  position: relative;
-  margin-top: -20rpx;
+.tab-item-create {
+  justify-content: center !important;
+  padding: 0 !important;
 }
 
 .create-core {
-  width: 96rpx;
-  height: 96rpx;
+  width: 68rpx;
+  height: 68rpx;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f4b36f 0%, #df8f49 100%);
   box-shadow:
-    0 8rpx 24rpx rgba(223, 143, 73, 0.35),
+    0 10rpx 20rpx rgba(223, 143, 73, 0.28),
     0 2rpx 6rpx rgba(223, 143, 73, 0.2),
     inset 0 1rpx 0 rgba(255, 255, 255, 0.3);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.create-item:active .create-core {
-  transform: scale(0.92);
+.tab-item-create:active .create-core {
+  transform: scale(0.95);
   box-shadow:
-    0 4rpx 12rpx rgba(223, 143, 73, 0.3),
+    0 6rpx 14rpx rgba(223, 143, 73, 0.24),
     inset 0 1rpx 0 rgba(255, 255, 255, 0.3);
 }
 
 .create-plus {
   position: relative;
-  width: 40rpx;
-  height: 40rpx;
+  width: 28rpx;
+  height: 28rpx;
 }
 
 .create-plus::before,
 .create-plus::after {
   content: '';
   position: absolute;
-  background: white;
+  background: #ffffff;
   border-radius: 2rpx;
 }
 
 .create-plus::before {
   left: 50%;
-  top: 4rpx;
-  bottom: 4rpx;
+  top: 2rpx;
+  bottom: 2rpx;
   width: 4rpx;
   transform: translateX(-50%);
 }
 
 .create-plus::after {
   top: 50%;
-  left: 4rpx;
-  right: 4rpx;
+  left: 2rpx;
+  right: 2rpx;
   height: 4rpx;
   transform: translateY(-50%);
+}
+
+.create-text {
+  margin-top: 6rpx !important;
+  color: #c67e3b !important;
 }

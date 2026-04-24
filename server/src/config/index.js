@@ -11,7 +11,7 @@ module.exports = {
     secret: process.env.WX_SECRET || ''
   },
   db: {
-    path: process.env.DB_PATH || './database/dada.db'
+    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/dada'
   },
   upload: {
     dir: process.env.UPLOAD_DIR || './uploads',
@@ -19,6 +19,18 @@ module.exports = {
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60000,
-    max: parseInt(process.env.RATE_LIMIT_MAX) || 100
+    max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
+    auth: {
+      windowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+      max: parseInt(process.env.AUTH_RATE_LIMIT_MAX) || 10
+    },
+    create: {
+      windowMs: parseInt(process.env.CREATE_RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000,
+      max: parseInt(process.env.CREATE_RATE_LIMIT_MAX) || 20
+    },
+    apply: {
+      windowMs: parseInt(process.env.APPLY_RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000,
+      max: parseInt(process.env.APPLY_RATE_LIMIT_MAX) || 30
+    }
   }
 };

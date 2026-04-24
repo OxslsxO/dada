@@ -1,15 +1,17 @@
 const jwt = require('jsonwebtoken');
-const db = require('../models/db');
+const User = require('../models/User');
+const Activity = require('../models/Activity');
+const Application = require('../models/Application');
+const OperationLog = require('../models/OperationLog');
 const config = require('../config');
 const wechatService = require('../services/wechatService');
-const logService = require('../services/logService');
 const { success } = require('../utils/response');
 const { AppError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user.id, openid: user.openid },
+    { id: user._id, openid: user.openid },
     config.jwt.secret,
     { expiresIn: config.jwt.expiresIn }
   );
@@ -23,54 +25,51 @@ const login = async (req, res, next) => {
       throw new AppError('缺少微信登录code', 400);
     }
 
-    let openid, session_key;
+    let openid, sessionKey;
 
     if (config.wx.appid && config.wx.secret) {
       const wxResult = await wechatService.code2Session(code);
       openid = wxResult.openid;
-      session_key = wxResult.session_key;
+      sessionKey = wxResult.session_key;
     } else {
       openid = 'dev_openid_' + code;
-      session_key = 'dev_session_key_' + Date.now();
+      sessionKey = 'dev_session_key_' + Date.now();
       logger.info('开发模式: 使用模拟openid', { openid });
     }
 
-    let user = db.get('SELECT * FROM users WHERE openid = ?', [openid]);
+    let user = await User.findOne({ openid });
 
     if (user) {
-      db.run(`
-        UPDATE users SET session_key = ?, last_login_at = datetime('now', 'localtime')
-        WHERE id = ?
-      `, [session_key, user.id]);
-      user.session_key = session_key;
+      user.sessionKey = sessionKey;
+      user.lastLoginAt = new Date();
+      await user.save();
     } else {
-      const userId = 'u_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-      db.run(`
-        INSERT INTO users (id, openid, session_key, nickname, avatar_url)
-        VALUES (?, ?, ?, ?, ?)
-      `, [userId, openid, session_key, '新用户', '']);
-
-      user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
+      user = await User.create({
+        openid,
+        sessionKey,
+        nickname: '新用户',
+        avatarUrl: ''
+      });
     }
 
     const token = generateToken(user);
 
-    logService.log({
-      userId: user.id,
+    await OperationLog.create({
+      userId: user._id,
       action: 'login',
       targetType: 'user',
-      targetId: user.id,
+      targetId: user._id,
       ip: req.ip
     });
 
     return success(res, {
       token,
       userInfo: {
-        id: user.id,
+        id: user._id,
         nickname: user.nickname,
-        avatarUrl: user.avatar_url,
+        avatarUrl: user.avatarUrl,
         phone: user.phone,
-        isAuthenticated: !!user.is_authenticated
+        isAuthenticated: !!user.isAuthenticated
       }
     }, '登录成功');
   } catch (err) {
@@ -82,22 +81,22 @@ const getUserInfo = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    const user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
+    const user = await User.findById(userId);
     if (!user) {
       throw new AppError('用户不存在', 404);
     }
 
-    const activityCount = db.get('SELECT COUNT(*) as count FROM activities WHERE creator_id = ?', [userId]).count;
-    const joinedCount = db.get("SELECT COUNT(*) as count FROM applications WHERE applicant_id = ? AND status = 'approved'", [userId]).count;
+    const activityCount = await Activity.countDocuments({ creatorId: userId });
+    const joinedCount = await Application.countDocuments({ applicantId: userId, status: 'approved' });
 
     return success(res, {
-      id: user.id,
+      id: user._id,
       nickname: user.nickname,
-      avatarUrl: user.avatar_url,
+      avatarUrl: user.avatarUrl,
       phone: user.phone,
       gender: user.gender,
-      isAuthenticated: !!user.is_authenticated,
-      createdAt: user.created_at,
+      isAuthenticated: !!user.isAuthenticated,
+      createdAt: user.createdAt,
       stats: {
         createdActivities: activityCount,
         joinedActivities: joinedCount
@@ -113,40 +112,21 @@ const updateUserInfo = async (req, res, next) => {
     const userId = req.user.id;
     const { nickname, avatarUrl, gender } = req.body;
 
-    const user = db.get('SELECT * FROM users WHERE id = ?', [userId]);
+    const user = await User.findById(userId);
     if (!user) {
       throw new AppError('用户不存在', 404);
     }
 
-    const updates = [];
-    const values = [];
-
     if (nickname !== undefined) {
       if (nickname.length > 20) throw new AppError('昵称不能超过20个字符', 400);
-      updates.push('nickname = ?');
-      values.push(nickname);
+      user.nickname = nickname;
     }
-    if (avatarUrl !== undefined) {
-      updates.push('avatar_url = ?');
-      values.push(avatarUrl);
-    }
-    if (gender !== undefined) {
-      updates.push('gender = ?');
-      values.push(gender);
-    }
+    if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
+    if (gender !== undefined) user.gender = gender;
 
-    if (updates.length === 0) {
-      throw new AppError('没有需要更新的字段', 400);
-    }
+    await user.save();
 
-    updates.push("updated_at = datetime('now', 'localtime')");
-    values.push(userId);
-
-    db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
-
-    const updatedUser = db.get('SELECT * FROM users WHERE id = ?', [userId]);
-
-    logService.log({
+    await OperationLog.create({
       userId,
       action: 'update_profile',
       targetType: 'user',
@@ -156,10 +136,10 @@ const updateUserInfo = async (req, res, next) => {
     });
 
     return success(res, {
-      id: updatedUser.id,
-      nickname: updatedUser.nickname,
-      avatarUrl: updatedUser.avatar_url,
-      gender: updatedUser.gender
+      id: user._id,
+      nickname: user.nickname,
+      avatarUrl: user.avatarUrl,
+      gender: user.gender
     }, '更新成功');
   } catch (err) {
     next(err);
@@ -175,17 +155,14 @@ const bindPhone = async (req, res, next) => {
       throw new AppError('请输入正确的手机号', 400);
     }
 
-    const existingUser = db.get('SELECT * FROM users WHERE phone = ? AND id != ?', [phone, userId]);
+    const existingUser = await User.findOne({ phone, _id: { $ne: userId } });
     if (existingUser) {
       throw new AppError('该手机号已被其他用户绑定', 400);
     }
 
-    db.run(`
-      UPDATE users SET phone = ?, updated_at = datetime('now', 'localtime')
-      WHERE id = ?
-    `, [phone, userId]);
+    await User.findByIdAndUpdate(userId, { phone });
 
-    logService.log({
+    await OperationLog.create({
       userId,
       action: 'bind_phone',
       targetType: 'user',
@@ -202,19 +179,13 @@ const bindPhone = async (req, res, next) => {
 const authenticate = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { realName, idCard } = req.body;
+    const { realName } = req.body;
 
     if (!realName) throw new AppError('请输入真实姓名', 400);
-    if (!idCard || !/^[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[0-9Xx]$/.test(idCard)) {
-      throw new AppError('请输入正确的身份证号', 400);
-    }
 
-    db.run(`
-      UPDATE users SET is_authenticated = 1, real_name = ?, updated_at = datetime('now', 'localtime')
-      WHERE id = ?
-    `, [realName, userId]);
+    await User.findByIdAndUpdate(userId, { isAuthenticated: true, realName });
 
-    logService.log({
+    await OperationLog.create({
       userId,
       action: 'authenticate',
       targetType: 'user',

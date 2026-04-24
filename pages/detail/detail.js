@@ -6,6 +6,22 @@ Page({
     isCollected: false
   },
 
+  formatDisplayTime(value) {
+    if (!value) return '';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    const s = String(date.getSeconds()).padStart(2, '0');
+
+    return `${y}-${m}-${d} ${h}:${min}:${s}`;
+  },
+
   onLoad(options) {
     this.loadGridDetail(options.id);
   },
@@ -26,7 +42,7 @@ Page({
           maxMembers: data.maxMembers,
           currentMembers: data.currentMembers,
           time: data.startTime,
-          timeText: data.startTime,
+          timeText: this.formatDisplayTime(data.startTime),
           tags: data.tags,
           creator: data.creator || { nickname: '匿名用户', avatarUrl: '' },
           cover: data.cover,

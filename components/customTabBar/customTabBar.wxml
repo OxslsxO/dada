@@ -5,7 +5,7 @@
     data-index="0"
     data-path="/pages/index/index"
   >
-    <view class="icon-wrap">
+    <view class="tab-icon-shell">
       <view class="icon-svg home-icon"></view>
     </view>
     <text class="tab-text">首页</text>
@@ -17,14 +17,14 @@
     data-index="2"
     data-path="/pages/messages/messages"
   >
-    <view class="icon-wrap">
+    <view class="tab-icon-shell">
       <view class="icon-svg message-icon"></view>
     </view>
     <text class="tab-text">消息</text>
   </view>
 
   <view
-    class="tab-item create-item"
+    class="tab-item tab-item-create {{activeIndex === 1 ? 'active' : ''}}"
     bindtap="switchTab"
     data-index="1"
     data-path="/pages/create/create"
@@ -32,6 +32,7 @@
     <view class="create-core">
       <view class="create-plus"></view>
     </view>
+    <text class="tab-text create-text">发布</text>
   </view>
 
   <view
@@ -40,7 +41,7 @@
     data-index="3"
     data-path="/pages/profile/profile"
   >
-    <view class="icon-wrap">
+    <view class="tab-icon-shell">
       <view class="icon-svg profile-icon"></view>
     </view>
     <text class="tab-text">我的</text>
