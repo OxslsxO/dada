@@ -14,8 +14,8 @@ const globalLimiter = rateLimit({
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
+  windowMs: config.rateLimit.auth.windowMs,
+  max: config.rateLimit.auth.max,
   message: {
     code: 429,
     message: '登录请求过于频繁，请15分钟后再试',
@@ -24,8 +24,8 @@ const authLimiter = rateLimit({
 });
 
 const createLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 20,
+  windowMs: config.rateLimit.create.windowMs,
+  max: config.rateLimit.create.max,
   message: {
     code: 429,
     message: '创建操作过于频繁，请1小时后再试',
@@ -34,8 +34,8 @@ const createLimiter = rateLimit({
 });
 
 const applyLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 30,
+  windowMs: config.rateLimit.apply.windowMs,
+  max: config.rateLimit.apply.max,
   message: {
     code: 429,
     message: '申请操作过于频繁，请1小时后再试',

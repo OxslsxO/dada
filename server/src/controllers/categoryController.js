@@ -1,18 +1,16 @@
-const db = require('../models/db');
+const Category = require('../models/Category');
 const { success } = require('../utils/response');
 
 const getCategories = async (req, res, next) => {
   try {
-    const categories = db.all(`
-      SELECT * FROM categories WHERE status = 1 ORDER BY sort_order ASC
-    `);
+    const categories = await Category.find({ status: 1 }).sort({ sortOrder: 1 });
 
     return success(res, categories.map(cat => ({
-      id: cat.id,
+      id: cat._id,
       name: cat.name,
       code: cat.code,
       icon: cat.icon,
-      sortOrder: cat.sort_order
+      sortOrder: cat.sortOrder
     })));
   } catch (err) {
     next(err);

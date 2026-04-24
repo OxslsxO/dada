@@ -1,6 +1,4 @@
-const app = getApp();
-
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'http://localhost:3001/api';
 
 function request(options) {
   return new Promise((resolve, reject) => {
@@ -11,7 +9,8 @@ function request(options) {
       });
     }
 
-    const token = app.globalData.token;
+    const app = getApp();
+    const token = app ? app.globalData.token : null;
     const header = {
       'Content-Type': 'application/json',
       ...options.header
@@ -40,7 +39,10 @@ function request(options) {
             reject(res.data);
           }
         } else if (res.statusCode === 401) {
-          app.logout();
+          const app = getApp();
+          if (app && app.logout) {
+            app.logout();
+          }
           wx.showToast({
             title: '登录已过期，请重新登录',
             icon: 'none'
@@ -89,7 +91,8 @@ function del(url, data = {}, options = {}) {
 
 function uploadFile(filePath) {
   return new Promise((resolve, reject) => {
-    const token = app.globalData.token;
+    const app = getApp();
+    const token = app ? app.globalData.token : null;
     wx.uploadFile({
       url: BASE_URL + '/upload/images',
       filePath,
