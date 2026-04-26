@@ -58,8 +58,7 @@
 
     <view class="info-card">
       <view class="info-head">
-        <text class="section-title">这场局怎么玩</text>
-        <text class="section-tip">清晰一点，见面会更轻松</text>
+        <text class="section-title">活动详情</text>
       </view>
       <text class="info-content">{{grid.description}}</text>
     </view>
