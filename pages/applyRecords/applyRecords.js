@@ -82,6 +82,6 @@ Page({
   },
 
   goToHome() {
-    wx.switchTab({ url: '/pages/index/index' });
+    wx.redirectTo({ url: '/pages/index/index' });
   }
 });

@@ -168,7 +168,7 @@ Page({
   },
 
   goToMessages() {
-    wx.switchTab({ url: '/pages/messages/messages' });
+    wx.redirectTo({ url: '/pages/messages/messages' });
   },
 
   toggleFilter() {

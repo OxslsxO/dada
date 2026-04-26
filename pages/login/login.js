@@ -91,7 +91,7 @@ Page({
       wx.hideLoading();
       wx.showToast({ title: '验证成功', icon: 'success' });
       setTimeout(() => {
-        wx.switchTab({ url: '/pages/index/index' });
+        wx.redirectTo({ url: '/pages/index/index' });
       }, 1500);
     }).catch(() => {
       wx.hideLoading();
