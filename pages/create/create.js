@@ -239,7 +239,7 @@ Page({
       wx.showToast({ title: '创建成功', icon: 'success' });
 
       setTimeout(() => {
-        wx.switchTab({ url: '/pages/index/index' });
+        wx.redirectTo({ url: '/pages/index/index' });
       }, 1500);
     } catch (err) {
       wx.hideLoading();

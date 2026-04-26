@@ -29,12 +29,21 @@ Component({
   },
   methods: {
     switchTab(e) {
-      const index = e.currentTarget.dataset.index;
+      const index = Number(e.currentTarget.dataset.index);
       const path = e.currentTarget.dataset.path;
-      
+
+      if (!path) return;
+
+      const pages = getCurrentPages();
+      const currentPage = pages[pages.length - 1];
+      if (`/${currentPage.route}` === path) {
+        this.setData({ activeIndex: index });
+        return;
+      }
+
       this.setData({ activeIndex: index });
-      
-      wx.switchTab({
+
+      wx.redirectTo({
         url: path
       });
     }
