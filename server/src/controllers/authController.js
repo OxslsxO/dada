@@ -149,18 +149,41 @@ const updateUserInfo = async (req, res, next) => {
 const bindPhone = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { phone } = req.body;
+    const { phone, phoneCode, encryptedData, iv } = req.body;
+    let resolvedPhone = phone;
 
-    if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+    if (!resolvedPhone && phoneCode) {
+      if (config.wx.appid && config.wx.secret) {
+        const phoneInfo = await wechatService.getPhoneNumber(phoneCode);
+        resolvedPhone = phoneInfo && (phoneInfo.purePhoneNumber || phoneInfo.phoneNumber);
+      } else {
+        const suffix = String(
+          Math.abs(String(userId).split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0))
+        ).padStart(9, '0').slice(-9);
+        resolvedPhone = `13${suffix}`;
+        logger.info('开发模式: 使用模拟微信手机号', { userId, phone: resolvedPhone });
+      }
+    }
+
+    if (!resolvedPhone && encryptedData && iv) {
+      const user = await User.findById(userId);
+      if (!user || !user.sessionKey) {
+        throw new AppError('微信登录状态无效，请重新登录', 401);
+      }
+      const phoneInfo = wechatService.decryptPhoneNumber(user.sessionKey, encryptedData, iv);
+      resolvedPhone = phoneInfo && (phoneInfo.purePhoneNumber || phoneInfo.phoneNumber);
+    }
+
+    if (!resolvedPhone || !/^1[3-9]\d{9}$/.test(resolvedPhone)) {
       throw new AppError('请输入正确的手机号', 400);
     }
 
-    const existingUser = await User.findOne({ phone, _id: { $ne: userId } });
+    const existingUser = await User.findOne({ phone: resolvedPhone, _id: { $ne: userId } });
     if (existingUser) {
       throw new AppError('该手机号已被其他用户绑定', 400);
     }
 
-    await User.findByIdAndUpdate(userId, { phone });
+    await User.findByIdAndUpdate(userId, { phone: resolvedPhone });
 
     await OperationLog.create({
       userId,
@@ -170,7 +193,7 @@ const bindPhone = async (req, res, next) => {
       ip: req.ip
     });
 
-    return success(res, null, '手机号绑定成功');
+    return success(res, { phone: resolvedPhone }, '手机号绑定成功');
   } catch (err) {
     next(err);
   }

@@ -1,5 +1,4 @@
-const { post } = require('../../utils/request.js');
-const { uploadFiles } = require('../../utils/request.js');
+const { post, uploadFiles } = require('../../utils/request.js');
 
 const typeWithTags = {
   food: ['火锅', '烧烤', '日料', '下午茶', '宵夜', '奶茶', '咖啡', '聚餐'],
@@ -9,10 +8,17 @@ const typeWithTags = {
   study: ['考研', '考公', '英语', '自习', '考证', '阅读', '学习', '备考'],
   travel: ['周边游', '露营', '自驾游', '看海', '爬山', '摄影', '旅行', '徒步'],
   entertainment: ['电影', 'KTV', '演唱会', '看展', 'livehouse', '音乐节', '话剧'],
-  fitness: ['健身', '撸铁', '瑜伽', '普拉提', '游泳', '跑步', '健身', '塑形'],
+  fitness: ['健身', '撸铁', '瑜伽', '普拉提', '游泳', '跑步', '塑形'],
   pet: ['遛狗', '撸猫', '宠物聚会', '宠物摄影', '宠物训练'],
-  other: []
+  other: ['约伴', '同城', '周末', '新手友好', 'AA制']
 };
+
+function buildPresetTags(typeId, selectedTags = []) {
+  return (typeWithTags[typeId] || []).map(name => ({
+    name,
+    selected: selectedTags.indexOf(name) !== -1
+  }));
+}
 
 Page({
   data: {
@@ -29,41 +35,150 @@ Page({
       { id: 'other', name: '其他' }
     ],
     typeIndex: 0,
-    presetTags: [],
+    presetTags: buildPresetTags('food'),
     selectedTags: [],
     customTagValue: '',
-    timeValue: '',
-    timeText: '请选择活动时间',
-    startTime: '',
+    maxMembers: 6,
+    minDate: '',
+    startDate: '',
+    startClock: '',
+    endDate: '',
+    endClock: '',
+    hasStartTime: false,
+    showEndTimePanel: false,
     locationInfo: {},
     manualLocation: '',
     imageList: [],
+    showPhonePanel: false,
+    privacyAgreed: false,
+    isBindingPhone: false,
     isSubmitting: false
   },
 
   onLoad() {
     const now = new Date();
-    const startTime = now.getFullYear() + '-' +
-                    (now.getMonth() + 1).toString().padStart(2, '0') + '-' +
-                    now.getDate().toString().padStart(2, '0') + ' ' +
-                    now.getHours().toString().padStart(2, '0') + ':' +
-                    now.getMinutes().toString().padStart(2, '0');
+    this.setData({ minDate: this.formatDate(now) });
 
-    this.setData({
-      startTime,
-      timeValue: now.getTime(),
-      presetTags: typeWithTags[this.data.types[0].id]
+    getApp().ensureLogin().then(() => {
+      this.showPhonePanelIfNeeded();
     });
   },
 
-  bindTypeChange(e) {
-    const typeIndex = e.detail.value;
+  formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  },
+
+  formatClock(date) {
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${h}:${min}`;
+  },
+
+  composeDateTime(date, clock) {
+    if (!date || !clock) return '';
+    return `${date} ${clock}`;
+  },
+
+  parseDateTime(value) {
+    if (!value) return null;
+    const date = new Date(value.replace(/-/g, '/'));
+    return Number.isNaN(date.getTime()) ? null : date;
+  },
+
+  showPhonePanelIfNeeded() {
+    const app = getApp();
+    const userInfo = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo') || {};
+    if (!userInfo.phone) {
+      this.setData({ showPhonePanel: true });
+      this.preparePrivacyAuthorization();
+      return true;
+    }
+    return false;
+  },
+
+  preparePrivacyAuthorization() {
+    if (!wx.requirePrivacyAuthorize) {
+      this.setData({ privacyAgreed: true });
+      return;
+    }
+
+    wx.requirePrivacyAuthorize({
+      success: () => {
+        this.setData({ privacyAgreed: true });
+      },
+      fail: () => {
+        this.setData({ privacyAgreed: false });
+      }
+    });
+  },
+
+  onAgreePrivacy() {
+    this.setData({ privacyAgreed: true });
+  },
+
+  hidePhonePanel() {
+    this.setData({ showPhonePanel: false });
+  },
+
+  bindWechatPhone(e) {
+    const detail = e.detail || {};
+    const errMsg = detail.errMsg || '';
+    console.log('getPhoneNumber detail:', detail);
+
+    if (errMsg.indexOf('fail') !== -1 || errMsg.indexOf('deny') !== -1) {
+      wx.showToast({ title: this.getPhoneAuthFailMessage(errMsg), icon: 'none' });
+      return;
+    }
+
+    const payload = {};
+    if (detail.code) {
+      payload.phoneCode = detail.code;
+    } else if (detail.encryptedData && detail.iv) {
+      payload.encryptedData = detail.encryptedData;
+      payload.iv = detail.iv;
+    } else {
+      wx.showToast({ title: '未获取到手机号授权，请重试', icon: 'none' });
+      return;
+    }
+
+    this.setData({ isBindingPhone: true });
+    getApp().bindPhone(payload)
+      .then(() => {
+        wx.showToast({ title: '绑定成功', icon: 'success' });
+        this.setData({ showPhonePanel: false });
+      })
+      .catch((err) => {
+        if (err && err.isAuthError) return;
+        wx.showToast({ title: '绑定失败，请重试', icon: 'none' });
+      })
+      .finally(() => {
+        this.setData({ isBindingPhone: false });
+      });
+  },
+
+  getPhoneAuthFailMessage(errMsg) {
+    if (errMsg.indexOf('privacy') !== -1) return '请先同意隐私协议';
+    if (errMsg.indexOf('permission') !== -1 || errMsg.indexOf('auth deny') !== -1) return '当前小程序未开通手机号能力';
+    if (errMsg.indexOf('user deny') !== -1 || errMsg.indexOf('deny') !== -1) return '绑定手机号后才能发布活动';
+    return '未唤起手机号授权，请查看控制台错误';
+  },
+
+  selectType(e) {
+    const typeIndex = Number(e.currentTarget.dataset.index);
     const typeId = this.data.types[typeIndex].id;
     this.setData({
       typeIndex,
-      presetTags: typeWithTags[typeId] || [],
+      presetTags: buildPresetTags(typeId),
       selectedTags: []
     });
+  },
+
+  syncPresetTags(selectedTags) {
+    const typeId = this.data.types[this.data.typeIndex].id;
+    this.setData({ presetTags: buildPresetTags(typeId, selectedTags) });
   },
 
   toggleTag(e) {
@@ -74,14 +189,14 @@ Page({
     if (index !== -1) {
       selectedTags.splice(index, 1);
     } else {
-      if (selectedTags.length < 5) {
-        selectedTags.push(tag);
-      } else {
+      if (selectedTags.length >= 5) {
         wx.showToast({ title: '最多选择5个标签', icon: 'none' });
         return;
       }
+      selectedTags.push(tag);
     }
-    this.setData({ selectedTags });
+
+    this.setData({ selectedTags }, () => this.syncPresetTags(selectedTags));
   },
 
   onCustomTagInput(e) {
@@ -102,32 +217,71 @@ Page({
       wx.showToast({ title: '标签已存在', icon: 'none' });
       return;
     }
-    this.setData({ selectedTags: [...this.data.selectedTags, tag], customTagValue: '' });
+
+    const selectedTags = [...this.data.selectedTags, tag];
+    this.setData({ selectedTags, customTagValue: '' }, () => this.syncPresetTags(selectedTags));
   },
 
   removeTag(e) {
-    const index = e.currentTarget.dataset.index;
     const selectedTags = [...this.data.selectedTags];
-    selectedTags.splice(index, 1);
-    this.setData({ selectedTags });
+    selectedTags.splice(Number(e.currentTarget.dataset.index), 1);
+    this.setData({ selectedTags }, () => this.syncPresetTags(selectedTags));
   },
 
-  bindTimeChange(e) {
-    const date = new Date(e.detail.value);
-    const timeText = date.getFullYear() + '-' +
-                    (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
-                    date.getDate().toString().padStart(2, '0') + ' ' +
-                    date.getHours().toString().padStart(2, '0') + ':' +
-                    date.getMinutes().toString().padStart(2, '0');
+  onMaxMembersChange(e) {
+    this.setData({ maxMembers: e.detail.value });
+  },
 
-    this.setData({ timeText, timeValue: e.detail.value });
+  bindStartDateChange(e) {
+    this.setData({ startDate: e.detail.value }, () => this.updateDefaultEndTime());
+  },
+
+  bindStartClockChange(e) {
+    this.setData({ startClock: e.detail.value }, () => this.updateDefaultEndTime());
+  },
+
+  bindEndDateChange(e) {
+    this.setData({ endDate: e.detail.value }, () => this.ensureEndAfterStart());
+  },
+
+  bindEndClockChange(e) {
+    this.setData({ endClock: e.detail.value }, () => this.ensureEndAfterStart());
+  },
+
+  updateDefaultEndTime() {
+    const start = this.parseDateTime(this.composeDateTime(this.data.startDate, this.data.startClock));
+    if (!start) {
+      this.setData({ hasStartTime: false, showEndTimePanel: false });
+      return;
+    }
+
+    const defaultEnd = new Date(start.getTime() + 30 * 60 * 1000);
+    this.setData({
+      hasStartTime: true,
+      showEndTimePanel: true,
+      endDate: this.formatDate(defaultEnd),
+      endClock: this.formatClock(defaultEnd)
+    });
+  },
+
+  confirmEndTime() {
+    this.setData({ showEndTimePanel: false });
+  },
+
+  ensureEndAfterStart() {
+    const start = this.parseDateTime(this.composeDateTime(this.data.startDate, this.data.startClock));
+    const end = this.parseDateTime(this.composeDateTime(this.data.endDate, this.data.endClock));
+
+    if (start && end && end <= start) {
+      wx.showToast({ title: '结束时间需晚于开始时间', icon: 'none' });
+      this.setData({ endDate: '', endClock: '' });
+    }
   },
 
   chooseLocation() {
-    const that = this;
     wx.chooseLocation({
-      success(res) {
-        that.setData({
+      success: (res) => {
+        this.setData({
           locationInfo: {
             name: res.name,
             address: res.address,
@@ -159,47 +313,60 @@ Page({
       sizeType: ['compressed'],
       sourceType: ['album', 'camera'],
       success: (res) => {
-        this.setData({
-          imageList: this.data.imageList.concat(res.tempFilePaths)
-        });
+        this.setData({ imageList: this.data.imageList.concat(res.tempFilePaths) });
       }
     });
   },
 
+  previewImage(e) {
+    wx.previewImage({
+      current: e.currentTarget.dataset.url,
+      urls: this.data.imageList
+    });
+  },
+
   removeImage(e) {
-    const index = e.currentTarget.dataset.index;
     const imageList = [...this.data.imageList];
-    imageList.splice(index, 1);
+    imageList.splice(Number(e.currentTarget.dataset.index), 1);
     this.setData({ imageList });
   },
 
   async submitForm(e) {
     if (this.data.isSubmitting) return;
 
-    const formData = e.detail.value;
+    await getApp().ensureLogin();
+    if (this.showPhonePanelIfNeeded()) return;
 
-    if (!formData.title) {
+    const formData = e.detail.value;
+    const title = (formData.title || '').trim();
+    const description = (formData.description || '').trim();
+    const requirements = (formData.requirements || '').trim();
+    const address = (this.data.manualLocation || this.data.locationInfo.name || '').trim();
+    const startTime = this.composeDateTime(this.data.startDate, this.data.startClock);
+    const endTime = this.composeDateTime(this.data.endDate, this.data.endClock);
+
+    if (!title) {
       wx.showToast({ title: '请输入标题', icon: 'none' });
       return;
     }
-    if (!formData.maxMembers || formData.maxMembers < 2) {
-      wx.showToast({ title: '请输入至少2人的人数限制', icon: 'none' });
+    if (!startTime) {
+      wx.showToast({ title: '请选择开始时间', icon: 'none' });
       return;
     }
-    if (this.data.timeText === '请选择活动时间') {
-      wx.showToast({ title: '请选择活动时间', icon: 'none' });
+    if (!endTime) {
+      wx.showToast({ title: '请选择结束时间', icon: 'none' });
       return;
     }
-    if (!this.data.manualLocation && !this.data.locationInfo.name) {
+    if (!address) {
       wx.showToast({ title: '请选择或输入活动地点', icon: 'none' });
       return;
     }
-    if (!formData.description) {
+    if (!description) {
       wx.showToast({ title: '请输入详细描述', icon: 'none' });
       return;
     }
     if (this.data.selectedTags.length === 0) {
-      wx.showToast({ title: '请至少选择一个标签', icon: 'none' });
+      wx.showToast({ title: '请至少添加一个标签', icon: 'none' });
       return;
     }
 
@@ -209,41 +376,36 @@ Page({
     try {
       let imageUrls = [];
       if (this.data.imageList.length > 0) {
-        try {
-          const uploadResults = await uploadFiles(this.data.imageList);
-          imageUrls = uploadResults.flat();
-        } catch (err) {
-          console.error('图片上传失败', err);
-        }
+        const uploadResults = await uploadFiles(this.data.imageList);
+        imageUrls = uploadResults.flat();
       }
 
-      const activityData = {
-        title: formData.title,
-        description: formData.description,
+      await post('/activities', {
+        title,
+        description,
         categoryName: this.data.types[this.data.typeIndex].name,
         images: imageUrls,
-        startTime: this.data.timeText,
-        address: this.data.manualLocation || this.data.locationInfo.name || '',
+        startTime,
+        endTime,
+        address,
         latitude: this.data.locationInfo.latitude || 0,
         longitude: this.data.locationInfo.longitude || 0,
-        maxMembers: parseInt(formData.maxMembers),
+        maxMembers: this.data.maxMembers,
         tags: this.data.selectedTags,
-        requirements: formData.requirements || '',
+        requirements,
         cover: imageUrls.length > 0 ? imageUrls[0] : '',
         status: 'published'
-      };
-
-      await post('/activities', activityData, { showLoading: false });
+      }, { showLoading: false });
 
       wx.hideLoading();
       wx.showToast({ title: '创建成功', icon: 'success' });
-
       setTimeout(() => {
         wx.redirectTo({ url: '/pages/index/index' });
       }, 1500);
     } catch (err) {
       wx.hideLoading();
       console.error('创建活动失败', err);
+      if (err && err.isAuthError) return;
       wx.showToast({ title: '创建失败，请重试', icon: 'none' });
     } finally {
       this.setData({ isSubmitting: false });

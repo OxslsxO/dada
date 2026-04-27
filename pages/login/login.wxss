@@ -61,6 +61,27 @@
   margin-bottom: 32rpx;
 }
 
+.phone-card {
+  padding: 28rpx;
+  border-radius: 22rpx;
+  background: rgba(70, 106, 82, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.phone-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #223127;
+}
+
+.phone-desc {
+  font-size: 25rpx;
+  line-height: 1.5;
+  color: #5e6d63;
+}
+
 .code-input {
   display: flex;
   align-items: center;

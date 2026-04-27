@@ -1,4 +1,5 @@
 const axios = require('axios');
+const crypto = require('crypto');
 const config = require('../config');
 const logger = require('../utils/logger');
 
@@ -48,6 +49,51 @@ const getAccessToken = async () => {
   }
 };
 
+const getPhoneNumber = async (code) => {
+  const tokenResult = await getAccessToken();
+  const accessToken = tokenResult.access_token;
+
+  if (!accessToken) {
+    logger.error('获取微信手机号失败：AccessToken为空', tokenResult);
+    throw new Error(tokenResult.errmsg || '获取微信AccessToken失败');
+  }
+
+  const url = `https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}`;
+
+  try {
+    const response = await axios.post(url, { code }, { timeout: 10000 });
+    const data = response.data;
+
+    if (data.errcode !== 0) {
+      logger.error('微信手机号接口错误', { errcode: data.errcode, errmsg: data.errmsg });
+      throw new Error(`获取微信手机号失败: ${data.errmsg}`);
+    }
+
+    return data.phone_info;
+  } catch (err) {
+    logger.error('微信手机号请求异常', { error: err.message });
+    throw err;
+  }
+};
+
+const decryptPhoneNumber = (sessionKey, encryptedData, iv) => {
+  try {
+    const sessionKeyBuffer = Buffer.from(sessionKey, 'base64');
+    const encryptedDataBuffer = Buffer.from(encryptedData, 'base64');
+    const ivBuffer = Buffer.from(iv, 'base64');
+    const decipher = crypto.createDecipheriv('aes-128-cbc', sessionKeyBuffer, ivBuffer);
+    decipher.setAutoPadding(true);
+
+    let decoded = decipher.update(encryptedDataBuffer, undefined, 'utf8');
+    decoded += decipher.final('utf8');
+
+    return JSON.parse(decoded);
+  } catch (err) {
+    logger.error('微信手机号解密失败', { error: err.message });
+    throw err;
+  }
+};
+
 const msgSecCheck = async (accessToken, content) => {
   const url = `https://api.weixin.qq.com/wxa/msg_sec_check?access_token=${accessToken}`;
   try {
@@ -67,5 +113,7 @@ const msgSecCheck = async (accessToken, content) => {
 module.exports = {
   code2Session,
   getAccessToken,
+  getPhoneNumber,
+  decryptPhoneNumber,
   msgSecCheck
 };

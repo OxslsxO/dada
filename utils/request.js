@@ -1,4 +1,48 @@
-const BASE_URL = 'http://localhost:3001/api';
+// const BASE_URL = 'http://localhost:3001/api';
+const BASE_URL = 'https://intercounty-distastefully-shanelle.ngrok-free.dev/api';
+
+function getToken() {
+  const app = getApp();
+  let token = app && app.globalData ? app.globalData.token : null;
+
+  if (!token) {
+    token = wx.getStorageSync('token');
+    if (token && app && app.globalData) {
+      app.globalData.token = token;
+    }
+  }
+
+  return token;
+}
+
+function buildHeaders(extra = {}) {
+  const token = getToken();
+  const header = {
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
+    ...extra
+  };
+
+  if (token) {
+    header.Authorization = 'Bearer ' + token;
+  }
+
+  return header;
+}
+
+function handleAuthExpired(reject, data = {}) {
+  const app = getApp();
+  if (app && app.logout) {
+    app.logout();
+  }
+
+  wx.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
+  setTimeout(() => {
+    wx.reLaunch({ url: '/pages/login/login' });
+  }, 1500);
+
+  reject({ ...data, isAuthError: true });
+}
 
 function request(options) {
   return new Promise((resolve, reject) => {
@@ -9,58 +53,52 @@ function request(options) {
       });
     }
 
-    const app = getApp();
-    const token = app ? app.globalData.token : null;
-    const header = {
-      'Content-Type': 'application/json',
-      ...options.header
-    };
-    if (token) {
-      header['Authorization'] = 'Bearer ' + token;
-    }
-
     wx.request({
       url: BASE_URL + options.url,
       method: options.method || 'GET',
       data: options.data || {},
-      header,
+      header: buildHeaders(options.header),
       success: (res) => {
         if (options.showLoading !== false) {
           wx.hideLoading();
         }
+
         if (res.statusCode === 200) {
+          if (typeof res.data === 'string') {
+            wx.showToast({ title: '接口返回异常，请检查 ngrok 服务', icon: 'none' });
+            reject(res.data);
+            return;
+          }
+
           if (res.data.code === 0) {
             resolve(res.data.data);
           } else {
-            wx.showToast({
-              title: res.data.message || '请求失败',
-              icon: 'none'
-            });
+            wx.showToast({ title: res.data.message || '请求失败', icon: 'none' });
             reject(res.data);
           }
-        } else if (res.statusCode === 401) {
-          const app = getApp();
-          if (app && app.logout) {
-            app.logout();
+          return;
+        }
+
+        if (res.statusCode === 401) {
+          if (options.skipAuthRedirect) {
+            reject({ ...(res.data || {}), isAuthError: true });
+          } else {
+            handleAuthExpired(reject, res.data || {});
           }
-          wx.showToast({
-            title: '登录已过期，请重新登录',
-            icon: 'none'
-          });
-          setTimeout(() => {
-            wx.reLaunch({ url: '/pages/login/login' });
-          }, 1500);
-          reject(res.data);
-        } else if (res.statusCode === 403) {
+          return;
+        }
+
+        if (res.statusCode === 403) {
           wx.showToast({ title: '权限不足', icon: 'none' });
           reject(res.data);
-        } else {
-          wx.showToast({
-            title: (res.data && res.data.message) || '请求失败',
-            icon: 'none'
-          });
-          reject(res.data || res);
+          return;
         }
+
+        wx.showToast({
+          title: (res.data && res.data.message) || '请求失败',
+          icon: 'none'
+        });
+        reject(res.data || res);
       },
       fail: (err) => {
         if (options.showLoading !== false) {
@@ -91,19 +129,25 @@ function del(url, data = {}, options = {}) {
 
 function uploadFile(filePath) {
   return new Promise((resolve, reject) => {
-    const app = getApp();
-    const token = app ? app.globalData.token : null;
     wx.uploadFile({
       url: BASE_URL + '/upload/images',
       filePath,
       name: 'images',
-      header: {
-        'Authorization': 'Bearer ' + token
-      },
+      header: buildHeaders({ 'Content-Type': 'multipart/form-data' }),
       success: (res) => {
-        const data = JSON.parse(res.data);
+        let data;
+        try {
+          data = JSON.parse(res.data);
+        } catch (err) {
+          wx.showToast({ title: '接口返回异常，请检查 ngrok 服务', icon: 'none' });
+          reject(res.data);
+          return;
+        }
+
         if (data.code === 0) {
           resolve(data.data.urls);
+        } else if (data.code === 401) {
+          handleAuthExpired(reject, data);
         } else {
           wx.showToast({ title: data.message || '上传失败', icon: 'none' });
           reject(data);

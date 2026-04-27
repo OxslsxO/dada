@@ -2,105 +2,211 @@
   <form bindsubmit="submitForm" class="form">
     <view class="form-item">
       <text class="label">标题</text>
-      <input 
-        class="input" 
-        name="title" 
-        placeholder="请输入搭子格子标题" 
+      <input
+        class="input"
+        name="title"
+        placeholder="请输入活动标题"
         required
       />
     </view>
 
     <view class="form-item">
       <text class="label">活动类型</text>
-      <picker 
-        name="type" 
-        range="{{types}}" 
-        range-key="name" 
-        bindchange="bindTypeChange"
-        value="{{typeIndex}}"
-      >
-        <view class="picker">
-          {{types[typeIndex].name}}
-        </view>
-      </picker>
-    </view>
-
-    <!-- 标签选择 -->
-    <view class="form-item">
-      <text class="label">添加标签</text>
-      <view class="tag-selector">
-        <view class="preset-tags">
-          <view 
-            class="tag-item {{selectedTags.indexOf(tag) !== -1 ? 'active' : ''}}" 
-            wx:for="{{presetTags}}" 
-            wx:key="index"
-            bindtap="toggleTag"
-            data-tag="{{tag}}"
-          >
-            {{tag}}
-          </view>
-        </view>
-        <view class="custom-tag-input">
-          <input 
-            class="input tag-input" 
-            placeholder="输入自定义标签" 
-            bindconfirm="addCustomTag"
-            value="{{customTagValue}}"
-            bindinput="onCustomTagInput"
-          />
-          <text class="add-tag-btn" bindtap="addCustomTag">添加</text>
+      <view class="chip-list">
+        <view
+          class="chip {{typeIndex === index ? 'active' : ''}}"
+          wx:for="{{types}}"
+          wx:key="id"
+          bindtap="selectType"
+          data-index="{{index}}"
+        >
+          <text class="chip-check" wx:if="{{typeIndex === index}}">✓</text>
+          {{item.name}}
         </view>
       </view>
-      <view class="selected-tags">
-        <view class="selected-tag" wx:for="{{selectedTags}}" wx:key="index">
-          {{item}}
+    </view>
+
+    <view class="form-item">
+      <view class="label-row">
+        <text class="label">活动标签</text>
+        <text class="label-tip">{{selectedTags.length}}/5</text>
+      </view>
+      <view class="chip-list tag-preset">
+        <view
+          class="chip tag-chip {{item.selected ? 'active' : ''}}"
+          wx:for="{{presetTags}}"
+          wx:key="name"
+          bindtap="toggleTag"
+          data-tag="{{item.name}}"
+        >
+          <text class="chip-check" wx:if="{{item.selected}}">✓</text>
+          {{item.name}}
+        </view>
+      </view>
+      <view class="custom-tag-input">
+        <input
+          class="input tag-input"
+          placeholder="用户自行添加标签"
+          bindconfirm="addCustomTag"
+          value="{{customTagValue}}"
+          bindinput="onCustomTagInput"
+        />
+        <text class="add-tag-btn" bindtap="addCustomTag">添加</text>
+      </view>
+      <view class="selected-tags" wx:if="{{selectedTags.length}}">
+        <view class="selected-tag" wx:for="{{selectedTags}}" wx:key="*this">
+          <text>{{item}}</text>
           <text class="remove-tag" bindtap="removeTag" data-index="{{index}}">×</text>
         </view>
       </view>
+      <text class="empty-tip" wx:else>当前未添加标签，可从上方预选或手动添加。</text>
     </view>
 
     <view class="form-item">
-      <text class="label">人数限制</text>
-      <view class="number-input">
-        <input 
-          class="input number" 
-          name="maxMembers" 
-          type="number" 
-          placeholder="请输入最大人数" 
-          required
-        />
+      <view class="label-row">
+        <text class="label">人数限制</text>
+        <text class="member-count">{{maxMembers}}人</text>
+      </view>
+      <slider
+        class="member-slider"
+        min="2"
+        max="30"
+        step="1"
+        value="{{maxMembers}}"
+        activeColor="#466a52"
+        backgroundColor="#dfeadf"
+        block-color="#466a52"
+        block-size="22"
+        bindchanging="onMaxMembersChange"
+        bindchange="onMaxMembersChange"
+      />
+      <view class="slider-scale">
+        <text>2人</text>
+        <text>30人</text>
       </view>
     </view>
 
     <view class="form-item">
       <text class="label">活动时间</text>
-      <picker 
-        name="time" 
-        mode="datetime" 
-        bindchange="bindTimeChange"
-        value="{{timeValue}}"
-        start="{{startTime}}"
-      >
-        <view class="picker">
-          {{timeText}}
+      <view class="time-range {{hasStartTime ? '' : 'single'}}">
+        <view class="time-group">
+          <text class="time-title">开始时间</text>
+          <view class="time-picker-row">
+            <picker
+              mode="date"
+              bindchange="bindStartDateChange"
+              value="{{startDate}}"
+              start="{{minDate}}"
+            >
+              <view class="picker-field compact">
+                <text class="{{startDate ? 'field-value' : 'field-placeholder'}}">{{startDate || '选择日期'}}</text>
+              </view>
+            </picker>
+            <picker
+              mode="time"
+              bindchange="bindStartClockChange"
+              value="{{startClock}}"
+            >
+              <view class="picker-field compact">
+                <text class="{{startClock ? 'field-value' : 'field-placeholder'}}">{{startClock || '选择时间'}}</text>
+              </view>
+            </picker>
+          </view>
         </view>
-      </picker>
+        <view class="time-divider" wx:if="{{hasStartTime}}">-</view>
+        <view class="time-group" wx:if="{{hasStartTime}}">
+          <text class="time-title">结束时间</text>
+          <view class="time-picker-row">
+            <picker
+              mode="date"
+              bindchange="bindEndDateChange"
+              value="{{endDate}}"
+              start="{{startDate || minDate}}"
+            >
+              <view class="picker-field compact">
+                <text class="{{endDate ? 'field-value' : 'field-placeholder'}}">{{endDate || '选择日期'}}</text>
+              </view>
+            </picker>
+            <picker
+              mode="time"
+              bindchange="bindEndClockChange"
+              value="{{endClock}}"
+            >
+              <view class="picker-field compact">
+                <text class="{{endClock ? 'field-value' : 'field-placeholder'}}">{{endClock || '选择时间'}}</text>
+              </view>
+            </picker>
+          </view>
+          <text class="time-hint">已默认为开始时间后30分钟，可点击修改。</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="time-modal-mask" wx:if="{{showEndTimePanel}}" bindtap="confirmEndTime"></view>
+    <view class="time-modal" wx:if="{{showEndTimePanel}}">
+      <view class="time-modal-header">
+        <text class="time-modal-title">选择结束时间</text>
+        <text class="time-modal-close" bindtap="confirmEndTime">完成</text>
+      </view>
+      <text class="time-modal-desc">已默认为开始时间后30分钟</text>
+      <view class="time-picker-row modal-row">
+        <picker
+          mode="date"
+          bindchange="bindEndDateChange"
+          value="{{endDate}}"
+          start="{{startDate || minDate}}"
+        >
+          <view class="picker-field compact">
+            <text class="field-value">{{endDate}}</text>
+          </view>
+        </picker>
+        <picker
+          mode="time"
+          bindchange="bindEndClockChange"
+          value="{{endClock}}"
+        >
+          <view class="picker-field compact">
+            <text class="field-value">{{endClock}}</text>
+          </view>
+        </picker>
+      </view>
+      <button class="btn btn-primary time-modal-btn" bindtap="confirmEndTime">确认结束时间</button>
+    </view>
+
+    <view class="form-item">
+      <text class="label">活动图片</text>
+      <view class="image-grid">
+        <view
+          class="image-item"
+          wx:for="{{imageList}}"
+          wx:key="*this"
+          bindtap="previewImage"
+          data-url="{{item}}"
+        >
+          <image src="{{item}}" mode="aspectFill"></image>
+          <text class="remove-image" catchtap="removeImage" data-index="{{index}}">×</text>
+        </view>
+        <view class="upload-card" bindtap="chooseImage" wx:if="{{imageList.length < 9}}">
+          <text class="upload-plus">＋</text>
+          <text class="upload-text">添加图片</text>
+        </view>
+      </view>
     </view>
 
     <view class="form-item">
       <text class="label">活动地点</text>
       <view class="location-selector">
         <button class="location-btn" bindtap="chooseLocation" type="default">
-          📍 选择位置
+          选择位置
         </button>
         <view class="location-info" wx:if="{{locationInfo.name}}">
           <text class="location-name">{{locationInfo.name}}</text>
           <text class="location-address">{{locationInfo.address}}</text>
         </view>
-        <input 
-          class="input location-input" 
-          name="location" 
-          placeholder="或手动输入地点" 
+        <input
+          class="input location-input"
+          name="location"
+          placeholder="或手动输入地点"
           value="{{manualLocation}}"
           bindinput="onManualLocationInput"
         />
@@ -109,10 +215,10 @@
 
     <view class="form-item">
       <text class="label">详细描述</text>
-      <textarea 
-        class="textarea" 
-        name="description" 
-        placeholder="请详细描述活动内容、要求等信息" 
+      <textarea
+        class="textarea"
+        name="description"
+        placeholder="请详细描述活动内容、要求等信息"
         required
         maxlength="500"
       />
@@ -120,17 +226,43 @@
 
     <view class="form-item">
       <text class="label">加入要求</text>
-      <textarea 
-        class="textarea" 
-        name="requirements" 
+      <textarea
+        class="textarea textarea-small"
+        name="requirements"
         placeholder="请输入加入要求（可选）"
         maxlength="200"
       />
     </view>
 
-    <button form-type="submit" class="btn btn-primary">创建搭子格子</button>
+    <button form-type="submit" class="btn btn-primary" loading="{{isSubmitting}}" disabled="{{isSubmitting}}">
+      创建活动
+    </button>
   </form>
 
-  <!-- 自定义 Tab bar -->
+  <view class="phone-modal-mask" wx:if="{{showPhonePanel}}"></view>
+  <view class="phone-modal" wx:if="{{showPhonePanel}}">
+    <view class="phone-modal-title">绑定手机号后发布</view>
+    <view class="phone-modal-desc">用于活动报名通知和账号安全，不会公开展示。</view>
+    <button
+      wx:if="{{!privacyAgreed}}"
+      class="btn btn-primary phone-modal-btn"
+      open-type="agreePrivacyAuthorization"
+      bindagreeprivacyauthorization="onAgreePrivacy"
+    >
+      同意隐私协议并继续
+    </button>
+    <button
+      wx:else
+      class="btn btn-primary phone-modal-btn"
+      open-type="getPhoneNumber"
+      bindgetphonenumber="bindWechatPhone"
+      loading="{{isBindingPhone}}"
+      disabled="{{isBindingPhone}}"
+    >
+      微信一键绑定
+    </button>
+    <view class="phone-modal-cancel" bindtap="hidePhonePanel">暂不绑定</view>
+  </view>
+
   <custom-tab-bar />
 </view>
