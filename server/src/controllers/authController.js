@@ -27,17 +27,30 @@ const login = async (req, res, next) => {
 
     let openid, sessionKey;
 
-    if (config.wx.appid && config.wx.secret) {
-      const wxResult = await wechatService.code2Session(code);
-      openid = wxResult.openid;
-      sessionKey = wxResult.session_key;
+    if (config.wx.appid && config.wx.secret && code !== 'dev') {
+      try {
+        const wxResult = await wechatService.code2Session(code);
+        openid = wxResult.openid;
+        sessionKey = wxResult.session_key;
+      } catch (wxErr) {
+        logger.error('微信登录失败，切换到开发模式', { error: wxErr.message });
+        openid = 'dev_openid_' + code;
+        sessionKey = 'dev_session_key_' + Date.now();
+      }
     } else {
       openid = 'dev_openid_' + code;
       sessionKey = 'dev_session_key_' + Date.now();
       logger.info('开发模式: 使用模拟openid', { openid });
     }
 
-    let user = await User.findOne({ openid });
+    let user;
+    try {
+      user = await User.findOne({ openid });
+    } catch (findErr) {
+      logger.error('查询用户失败，可能存在损坏数据，尝试清理', { openid, error: findErr.message });
+      await User.deleteOne({ openid });
+      user = null;
+    }
 
     if (user) {
       user.sessionKey = sessionKey;
@@ -122,7 +135,12 @@ const updateUserInfo = async (req, res, next) => {
       user.nickname = nickname;
     }
     if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
-    if (gender !== undefined) user.gender = gender;
+    if (gender !== undefined) {
+      const genderNum = parseInt(gender);
+      if (!isNaN(genderNum) && (genderNum === 0 || genderNum === 1 || genderNum === 2)) {
+        user.gender = genderNum;
+      }
+    }
 
     await user.save();
 

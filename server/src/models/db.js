@@ -19,7 +19,6 @@ function close() {
   }
 }
 
-process.on('exit', close);
 process.on('SIGINT', () => {
   close();
   process.exit(0);
